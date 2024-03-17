@@ -1,10 +1,12 @@
 {
   "name": "discord-bot-hoyolab",
   "version": "0.0.0",
+  "type": "module",
   "private": true,
   "scripts": {
     "fix": "prettier . --write",
     "register": "tsc && node dist/register.js",
+    "log": "wrangler tail",
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
     "start": "wrangler dev",
@@ -19,6 +21,7 @@
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.1.2",
     "@cloudflare/workers-types": "^4.20240314.0",
+    "discord-api-types": "^0.37.74",
     "dotenv": "^16.4.5",
     "prettier": "^3.2.5",
     "typescript": "^5.4.2",
