@@ -1,32 +1,58 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+import { DiscordHono } from 'discord-hono'
 
-export interface Env {
-	// Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
-	// MY_KV_NAMESPACE: KVNamespace;
-	//
-	// Example binding to Durable Object. Learn more at https://developers.cloudflare.com/workers/runtime-apis/durable-objects/
-	// MY_DURABLE_OBJECT: DurableObjectNamespace;
-	//
-	// Example binding to R2. Learn more at https://developers.cloudflare.com/workers/runtime-apis/r2/
-	// MY_BUCKET: R2Bucket;
-	//
-	// Example binding to a Service. Learn more at https://developers.cloudflare.com/workers/runtime-apis/service-bindings/
-	// MY_SERVICE: Fetcher;
-	//
-	// Example binding to a Queue. Learn more at https://developers.cloudflare.com/queues/javascript-apis/
-	// MY_QUEUE: Queue;
+type Env = {
+  Bindings: {
+    DISCORD_APPLICATION_ID: string
+    //DISCORD_TOKEN: string
+  }
 }
 
-export default {
-	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-		return new Response('Hello World!');
-	},
-};
+type APIJson = {
+  message: string
+  data: {
+    post: {
+      post: {
+        subject: string
+        desc: string
+      }
+      user: {
+        nickname: string
+        avatar_url: string
+      }
+      image_list: {
+        url: string
+      }[]
+    }
+  }
+}
+
+const app = new DiscordHono<Env>()
+  .command('url', async c => {
+    const url = c.values.url.toString()
+    const id = new URL(url).pathname.split('/').slice(-1)[0]
+    try {
+      const res = await fetch('https://bbs-api-os.hoyolab.com/community/post/wapi/getPostFull?post_id=' + id)
+      const json = (await res.json()) as APIJson
+      if (json.message !== 'OK') throw new Error('fetch Error')
+      const imageUrl = json.data.post.image_list[0].url || ''
+      return c.res({
+        embeds: [
+          {
+            title: json.data.post.post.subject,
+            url,
+            description: json.data.post.post.desc,
+            image: { url: imageUrl },
+          },
+        ],
+      })
+    } catch (e) {
+      return c.res(e + '\n' + url)
+    }
+  })
+  .command('invite', c =>
+    c.resEphemeral({
+      content: `https://discord.com/api/oauth2/authorize?client_id=${c.env.DISCORD_APPLICATION_ID}&permissions=0&scope=bot`,
+    }),
+  )
+
+export default app
