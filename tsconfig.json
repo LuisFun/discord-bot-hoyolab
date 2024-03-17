@@ -23,5 +23,6 @@
     "strict": true,
     /* Completeness */
     "skipLibCheck": true
-  }
+  },
+  "exclude": ["test"]
 }
