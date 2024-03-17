@@ -25,7 +25,7 @@ const commands = [
       { name: 'tr-TR', value: 'tr-tr' },
     ),
   ),
-  new Command('invite', 'Invite URL'),
+  new Command('invite', '').type(2),
 ]
 
 await register(
